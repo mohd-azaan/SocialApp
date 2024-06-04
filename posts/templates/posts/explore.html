@@ -1,0 +1,187 @@
+{% extends "users/base.html" %}
+{% load static %}
+{% block body %}
+<div class="container mx-auto my-5 p-5">
+    <div class="flex justify-center mt-20 mb-5">
+        <h1 class='text-3xl font-bold text-gray-700 text-center'>Explore</h1>
+    </div>
+    <!-- Posts Section -->
+    <div class="post-container grid-view space-y-3">
+        {% for post in posts %}
+            <div class="rounded-lg shadow-md max-w-2xl mx-auto bg-white">
+                <div class="h-full p-5 flex flex-col justify-between">
+                    <div class="flex items-center mb-4">
+                        <div class="flex-shrink-0">
+                            <img class="h-10 w-10 rounded-full object-cover" src="{{ post.user.profile.photo.url }}" alt="{{ post.user }}">
+                        </div>
+                        <div class="ml-3">
+                            <div class="text-sm font-medium text-gray-900">
+                                {{ post.user.username }}
+                            </div>
+                            <div class="text-sm text-gray-500">
+                                {{ post.created|date:"F d, Y" }}
+                            </div>
+                        </div>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-5">{{ post.title }}</h3>
+                    <div>
+                        <div class="h-64 overflow-hidden rounded-lg shadow-md flex justify-center items-center post-image {% if post.image.width != post.image.height %}bg-black{% endif %}" style="width: 100%; height: 100%; max-width: 630px; ">
+                            <img class="object-cover max-h-full max-w-full shadow" id="postid" src="{{ post.image.url }}" alt="{{ post.title }}">
+                        </div>
+                    </div>
+                    <div class="mt-2 text-gray-700 caption">
+                        {% if post.caption|length > 50 %}
+                            <p class="caption-text" data-toggle="false">{{ post.caption|truncatechars:50 }}</p>
+                            <button class="text-blue-500 hover:text-blue-700 show-more-btn">Show More</button>
+                        {% else %}
+                            <p class="caption-text">{{ post.caption }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="mt-4 flex items-center">
+                        <button class=" items-center">
+                            <div class="flex items-center  like-btn mr-4 ml-1"id="{{post.id}}">
+                                {% if user in post.liked_by.all %}
+                                    <img src="{% static 'users/images/likeicon.png' %}" alt="" class="w-6 h-6 mr-1 like-icon">
+                                    <span class="like-text text-red-500 hover:text-red-700">Liked</span>
+                                {% else %}
+                                    <img src="{% static 'users/images/likeiconempty.png' %}" alt="" class="w-6 h-6 mr-1 like-icon">
+                                    <span class="like-text text-gray-500 hover:text-gray-700">Like</span>
+                                {% endif %}
+                            </div>
+                        </button>
+                        
+                        
+                        <button class="flex items-center text-gray-500 hover:text-gray-700 comment-btn " data-post-id="{{ post.id }}">
+                            <svg class="w-6 h-6 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M21 4H3a2 2 0 00-2 2v11a2 2 0 002 2h2v3l4-3h10a2 2 0 002-2V6a2 2 0 00-2-2z"/>
+                            </svg>
+                            Comments
+                        </button>
+                    </div>
+                    <div class="like-count m-1 text-gray-500 ">
+                        {% if post.liked_by.count < 1 %}
+                            No likes
+                        {% elif post.liked_by.count == 1 %}
+                            Liked by {{ post.liked_by.first }}
+                        {% else %}
+                            Liked by {{ post.liked_by.first }} and {{ post.liked_by.count}} others
+                        {% endif %}
+                    </div>
+                    <div class="flex mt-3">
+                        <input type="text" class="bg-gray-100 appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder='Write a comment...' />
+                        <button class="bg-blue-500 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded ml-2">
+                            Comment
+                        </button>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Comment Modal -->
+    <div id="comment-modal" class="hidden fixed z-50 inset-0 overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all sm:max-w-lg sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Comments</h3>
+                            <div class="mt-2">
+                                <ul id="comments-list" class="text-sm text-gray-500">
+                                    <li>Great post!</li>
+                                    <li>Very informative.</li>
+                                    <li>Thanks for sharing!</li>
+                                    <!-- Static comments for demonstration -->
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="button" class="close-modal-btn mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    
+    window.CSRF_TOKEN = "{{ csrf_token }}";
+
+    $(document).on('click', '.like-btn', function(){
+        var post_id = this.id;
+        var likeButton = $(this);
+        console.log(post_id);
+        $.ajax({
+            method: 'POST',
+            url: '/posts/like/',
+            data: {post_id: post_id, csrfmiddlewaretoken: window.CSRF_TOKEN},
+            success: function(data) {
+                // Update like icon and text based on server response
+                if (data.liked) {
+                    likeButton.find('.like-icon').attr('src', '{% static "users/images/likeicon.png" %}');
+                    likeButton.find('.like-text').text('Liked');
+                } else {
+                    likeButton.find('.like-icon').attr('src', '{% static "users/images/likeiconempty.png" %}');
+                    likeButton.find('.like-text').text('Like');
+                }
+                // Reload the content of the page
+                $.ajax({
+                    url: '/posts/explore/',
+                    type: 'GET',
+                    success: function(response) {
+                        $('.post-container').html($(response).find('.post-container').html());
+                    }
+                });
+            },
+            error: function(xhr, status, error) {
+                console.error(xhr.responseText);
+            }
+        });
+    });
+        
+        const showMoreButtons = document.querySelectorAll('.show-more-btn');
+        
+        // Event listener for show more buttons
+        showMoreButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const captionText = button.previousElementSibling;
+                const isExpanded = button.dataset.toggle === 'true';
+                
+                if (isExpanded) {
+                    captionText.textContent = '{{ post.caption|truncatechars:50 }}';
+                    button.textContent = 'Show More';
+                } else {
+                    captionText.textContent = '{{ post.caption }}';
+                    button.textContent = 'Show Less';
+                }
+                
+                button.dataset.toggle = !isExpanded;
+            });
+        });
+        
+        const commentButtons = document.querySelectorAll('.comment-btn');
+        const modal = document.getElementById('comment-modal');
+        const closeModalBtn = document.querySelector('.close-modal-btn');
+        
+        // Event listener for comment buttons
+        commentButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                modal.classList.remove('hidden');
+            });
+        });
+        
+        // Event listener for close modal button
+        if (closeModalBtn) {
+            closeModalBtn.addEventListener('click', function () {
+                modal.classList.add('hidden');
+            });
+        }
+        
+    </script>
+{% endblock body %}
+        

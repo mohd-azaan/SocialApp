@@ -1,0 +1,38 @@
+{% extends "users/base.html" %}
+
+{% block body %}
+<div class="max-w-md mx-auto mt-32 p-6 bg-white shadow-md rounded-md">
+    <h1 class="text-3xl font-bold mb-8 text-gray-700 text-center">Create Post</h1>
+    <form action="" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="mb-4">
+            <label for="title" class="block text-gray-700 text-sm font-bold mb-2">Title</label>
+            <input type="text" name="title" id="title" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+        </div>
+        <div class="mb-4">
+            <label for="image" class="block text-gray-700 text-sm font-bold mb-2">Image</label>
+            <input type="file" name="image" id="image" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" onchange="displayImage(this)">
+            <img id="imagePreview" class="mt-2 w-full object-contain rounded-md" src="#" alt="Selected Image" style="display: none;">
+        </div>
+        <div class="mb-4">
+            <label for="caption" class="block text-gray-700 text-sm font-bold mb-2">Caption</label>
+            <textarea name="caption" id="caption" rows="4" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
+        </div>
+        <div class="flex items-center justify-center">
+            <button type="submit" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Post</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function displayImage(input) {
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            document.getElementById('imagePreview').src = e.target.result;
+            document.getElementById('imagePreview').style.display = 'block';
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+</script>
+{% endblock body %}

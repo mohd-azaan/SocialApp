@@ -1,0 +1,5 @@
+/* CSS for liked state */
+.like-btn.liked {
+    color: red; /* Change color to red */
+    fill: red; /* Fill the heart icon */
+}

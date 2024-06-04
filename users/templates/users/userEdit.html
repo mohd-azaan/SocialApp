@@ -1,0 +1,88 @@
+{% extends "users/base.html" %}
+
+{% block body %}
+<h1 class='text-3xl mt-10 font-bold text-gray-700 text-center'>Edit Profile</h1>
+
+<div class="container mx-auto flex justify-center">
+    <form id="profileForm" method="post" enctype='multipart/form-data' class='bg-white shadow-md m-10 w-full max-w-md rounded px-8 pt-6 pb-8 mb-4' style="min-width: 300px;">
+        {% csrf_token %}
+        <div class="text-center">
+            <h2 class="text-red-500 font-semibold">
+                {% if form.errors %}
+                    {% for field in form %}
+                        {{field.errors}}
+                    {% endfor %}
+                {% endif %}
+            </h2>
+        </div>
+
+        <!-- Profile Picture -->
+        <div class="relative flex flex-col items-center mb-4">
+            <img id="photoPreview" class="w-40 h-40 rounded-full object-cover shadow-md" src="{{ profile_form.instance.photo.url }}" alt="Profile Picture">
+
+            <!-- Edit icon overlay -->
+            <label for="photo" class="absolute bottom-0 pt-12 transform  -translate-y-2/3 cursor-pointer">
+                <svg class="w-6 h-6 text-white bg-gray-700 rounded-full hover:bg-gray-600 transition duration-300 ease-in-out" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M12.293 4.293a1 1 0 011.414 1.414l-8 8a1 1 0 01-1.414-1.414l8-8zM15 5a1 1 0 011 1v10a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1h10z" clip-rule="evenodd"/>
+                </svg>
+            </label>
+
+            <!-- File input field -->
+            <input type="file" id="photo" name="photo" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
+            <label for="photo" id="editPhotoLabel" class="mt-3 text-xs text-gray-500 cursor-pointer mb-4">Edit Profile Photo</label>
+        </div>
+
+        <!-- Edit profile photo text -->
+        
+        <!-- Hidden fields to store cropping data -->
+        <input type="hidden" id="cropX" name="cropX">
+        <input type="hidden" id="cropY" name="cropY">
+        <input type="hidden" id="cropWidth" name="cropWidth">
+        <input type="hidden" id="cropHeight" name="cropHeight">
+
+        <!-- Other fields -->
+        <div class='mb-4'>
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="username">Username</label>
+            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="username" type="text" placeholder="Username" name="username" value="{{ user_form.instance.username }}">
+        </div>
+        <div class='mb-4'>
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="first_name">First Name</label>
+            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="first_name" type="text" placeholder="First Name" name="first_name" value="{{ user_form.instance.first_name }}">
+        </div>
+        <div class='mb-4'>
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="last_name">Last Name</label>
+            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="last_name" type="text" placeholder="Last Name" name="last_name" value="{{ user_form.instance.last_name }}">
+        </div>
+        <div class='mb-4'>
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="email">Email</label>
+            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="email" type="email" placeholder="Email" name="email" value="{{ user_form.instance.email }}">
+        </div>
+        <button type="submit" class="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Save Changes</button>
+    </form>
+</div>
+
+<!-- JavaScript for handling image upload and cropping -->
+<script>
+    function handleImageUpload(event) {
+        const reader = new FileReader();
+        reader.onload = function() {
+            const output = document.getElementById('photoPreview');
+            output.src = reader.result;
+            
+            // Show the edit photo label
+            document.getElementById('editPhotoLabel').classList.remove('hidden');
+        };
+        reader.readAsDataURL(event.target.files[0]);
+    }
+
+    // Set the initial image if available
+    document.addEventListener("DOMContentLoaded", function() {
+        const initialPhotoUrl = "{{ profile_form.instance.photo.url }}";
+        if (initialPhotoUrl) {
+            document.getElementById('photoPreview').src = initialPhotoUrl;
+        }
+    });
+
+</script>
+
+{% endblock body %}
