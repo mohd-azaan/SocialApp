@@ -18,3 +18,15 @@ class Post(models.Model):
         if not self.slug:
             self.slug = slugify(self.title)
         super().save(*args, **kwargs)
+        
+class Comment(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
+    created = models.DateTimeField(auto_now_add=True)
+    body = models.TextField()
+    posted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+    class Meta:
+        ordering = ('created',)
+        
+    def __str__(self):
+        return f'Comment by {self.posted_by} on {self.post.title}'

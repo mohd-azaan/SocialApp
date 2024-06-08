@@ -1,0 +1,73 @@
+{% extends "users/base.html" %}
+{% load static %}
+{% block body %}
+<div class="container mx-auto my-5 p-5">
+    <!-- Chat Section -->
+    <div class="bg-white p-5 rounded-lg shadow-md max-w-4xl mx-auto mb-6 mt-16 bg-black">
+        <h2 class="text-3xl font-bold mb-5 text-gray-700">Chat with {{username}}</h2>
+        <!-- Chat Container -->
+        <div class="h-full flex flex-col">
+            <!-- Chat Messages -->
+            <div class="flex-grow overflow-hidden">
+                <div class="chat-messages h-full overflow-y-auto flex flex-col space-y-2 py-4 px-2 border border-gray-200 rounded-lg min-h-96 max-h-96" id="chat-messages">
+                    <!-- Static messages -->
+                    <div class="flex justify-start mb-2">
+                        <div class="max-w-xs rounded-lg overflow-hidden bg-gray-800 text-gray-100 p-3">
+                            <p>Incoming Message</p>
+                        </div>
+                    </div>
+                    <!-- Repeat the messages as needed -->
+                    <!-- For simplicity, I'm not repeating all the messages here -->
+                    <!-- Static messages -->
+                    <div class="flex justify-end mb-2">
+                        <div class="max-w-xs rounded-lg overflow-hidden bg-gray-300 text-gray-800 p-3">
+                            <p>Outgoing Message</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Input Field for New Message -->
+        <div class="fixed bottom-0 left-0 right-0 bg-white p-4 shadow-lg m-5 rounded-lg">
+            <div class="container mx-auto flex items-center space-x-3">
+                <input type="text" id="messageInput" class="bg-gray-100 appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Type your message..." />
+                <button id="sendMessageBtn" class="bg-blue-500 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded">
+                    Send
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        document.getElementById("sendMessageBtn").addEventListener("click", function() {
+            var messageInput = document.getElementById("messageInput");
+            var message = messageInput.value.trim();
+            if (message !== "") {
+                appendMessage(message, true);
+                messageInput.value = ""; // Clear input field after sending message
+                messageInput.focus(); // Keep focus on input field
+                // Here you can send the message to the server if needed
+            }
+        });
+        
+        function appendMessage(message, isYou) {
+            var chatMessages = document.getElementById("chat-messages");
+            var messageContainer = document.createElement("div");
+            var bgColorClass = isYou ? "bg-gray-300" : "bg-gray-800"; // Different background for incoming and outgoing messages
+            var textColorClass = isYou ? "" : "text-gray-100"; // Text color for incoming or outgoing messages
+            var justifyClass = isYou ? "justify-end" : "justify-start"; // Flex justify for incoming or outgoing messages
+            messageContainer.className = "flex " + justifyClass + " mb-2";
+            messageContainer.innerHTML = `
+                <div class="max-w-xs rounded-lg overflow-hidden ${bgColorClass} p-3 ${textColorClass}">
+                    <p>${message}</p>
+                </div>
+            `;
+            chatMessages.appendChild(messageContainer);
+            // Scroll to the bottom of the chat messages
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    });
+</script>
+{% endblock body %}

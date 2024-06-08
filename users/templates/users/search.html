@@ -1,0 +1,127 @@
+{% extends "users/base.html" %}
+{% load static %}
+
+{% block body %}
+<div class="container mx-auto my-5 p-5 mt-20">
+
+    <div class="bg-white p-5 rounded-lg shadow-lg max-w-2xl mx-auto mb-7">
+        <form method="GET" action="{% url 'search' %}" class="flex items-center">
+            <div class="relative flex-1">
+                <input type="text" name="q" id="search-input" class="w-full border border-gray-300 rounded-lg py-3 px-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300" placeholder="Search usernames..." value="{{ query }}">
+                <ul id="suggestions" class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto hidden"></ul>
+            </div>
+            <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg ml-4">
+                Search
+            </button>
+        </form>
+    </div>
+
+    <div class="bg-white p-6 rounded-lg shadow-lg max-w-2xl mx-auto">
+        {% if query %}
+            <h3 class="text-2xl font-semibold text-gray-800 mb-4">Search Results for "{{ query }}"</h3>
+        {% else %}
+            <h3 class="text-2xl font-semibold text-gray-800 mb-4">All Users</h3>
+        {% endif %}
+        <ul>
+            {% for user in users %}
+                <li class="mb-4 flex items-center justify-between border-b pb-4 {% if forloop.last %}border-none{% endif %}">
+                    <div class="flex items-center">
+                        <a href="{% url 'user_profile' user.id %}">
+                            <img class="h-12 w-12 rounded-full object-cover mr-4" src="{{ user.profile.photo.url }}" alt="{{ user.username }}">
+                        </a>
+                        <a href="{% url 'user_profile' user.id %}" class="text-lg font-medium text-blue-600 hover:text-blue-800 transition duration-300">{{ user.username }}</a>
+                    </div>
+                    <div>
+                        {% if request.user.is_authenticated and request.user != user %}
+                            <button class="follow-unfollow-btn" data-user-id="{{ user.id }}">
+                                {% if user.id in following_users %}
+                                    <span class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded ml-2">Unfollow</span>
+                                {% else %}
+                                    <span class="bg-blue-500 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded ml-2">Follow</span>
+                                {% endif %}
+                            </button>
+                        {% endif %}
+                    </div>
+                </li>
+            {% empty %}
+                <li class="text-gray-500">No users found.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('search-input');
+        const suggestionsBox = document.getElementById('suggestions');
+
+        searchInput.addEventListener('input', function() {
+            const query = searchInput.value.trim();
+            if (query.length > 0) {
+                fetch(`/suggest/?q=${query}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        suggestionsBox.innerHTML = '';
+                        suggestionsBox.classList.remove('hidden');
+                        if (data.length > 0) {
+                            data.forEach(suggestion => {
+                                const li = document.createElement('li');
+                                li.className = 'px-4 py-2 hover:bg-gray-200 flex items-center cursor-pointer transition duration-300';
+                                li.innerHTML = `
+                                    <img class="h-8 w-8 rounded-full object-cover mr-2" src="${suggestion.profile_photo}" alt="${suggestion.username}">
+                                    <a href="${suggestion.profile_url}" class="text-gray-800 hover:text-blue-600 transition duration-300">${suggestion.username}</a>`;
+                                suggestionsBox.appendChild(li);
+                            });
+                        } else {
+                            const li = document.createElement('li');
+                            li.className = 'px-4 py-2 text-gray-500';
+                            li.textContent = 'No suggestions found.';
+                            suggestionsBox.appendChild(li);
+                        }
+                    });
+            } else {
+                suggestionsBox.classList.add('hidden');
+            }
+        });
+
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!searchInput.contains(event.target) && !suggestionsBox.contains(event.target)) {
+                suggestionsBox.classList.add('hidden');
+            }
+        });
+
+        // Handle follow/unfollow button click
+        document.querySelectorAll('.follow-unfollow-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const userId = this.getAttribute('data-user-id');
+                const isFollowing = this.querySelector('span').textContent === 'Unfollow';
+                const url = isFollowing ? '{% url "unfollow" 0 %}'.replace('0', userId) : '{% url "follow" 0 %}'.replace('0', userId);
+                
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ user_id: userId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const buttonText = this.querySelector('span');
+                    if (data.followed) {
+                        buttonText.textContent = 'Unfollow';
+                        buttonText.classList.replace('bg-blue-500', 'bg-red-500');
+                        buttonText.classList.replace('hover:bg-blue-700', 'hover:bg-red-600');
+                    } else {
+                        buttonText.textContent = 'Follow';
+                        buttonText.classList.replace('bg-red-500', 'bg-blue-500');
+                        buttonText.classList.replace('hover:bg-red-600', 'hover:bg-blue-700');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            });
+        });
+    });
+</script>
+{% endblock %}

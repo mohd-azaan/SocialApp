@@ -1,0 +1,56 @@
+{% extends "users/base.html" %}
+{% load static %}
+
+{% block body %}
+<div class="container mx-auto my-5 p-5 mt-20">
+
+    <div class="bg-white p-8 rounded-lg shadow-lg max-w-2xl mx-auto mb-10">
+        <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Chats</h2>
+        <ul>
+            {% for chat in chats %}
+            <li class="mb-4 border-b pb-4 {% if forloop.last %}border-none{% endif %}">
+                <a href="{% url 'chat_room' chat.id %}" class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <img class="h-12 w-12 rounded-full object-cover mr-4" src="{% static 'path/to/chat_photo.jpg' %}" alt="Chat Photo">
+                        <span class="text-lg font-medium text-blue-600 hover:text-blue-800 transition duration-300">Chat with {{ chat.other_user.username }}</span>
+                    </div>
+                    <span class="text-gray-600 text-sm">{{ chat.last_message.timestamp|date:"F d, Y H:i" }}</span>
+                </a>
+            </li>
+            {% empty %}
+            <li class="text-gray-500">No chats available.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="bg-white p-8 rounded-lg shadow-lg max-w-2xl mx-auto">
+        <h3 class="text-2xl font-semibold text-gray-800 mb-4">All Users</h3>
+        <ul>
+            {% for user in users %}
+            {% if user != request.user %}
+            <li class="mb-4 flex items-center justify-between border-b pb-4 {% if forloop.last %}border-none{% endif %}">
+                <div class="flex items-center">
+                    <a href="{% url 'chat' request.user.id user.id %}">
+                        <button class="flex items-center text-gray-500 hover:text-gray-700 message-btn mx-auto mt-1">
+                            <!-- Icon -->
+                            <img src="{% static 'users/images/message.png' %}" alt="" class="w-6 h-6 mr-1 like-icon">
+                            <!-- Text -->
+                            <span>Message {{ user.username }}</span>
+                        </button>
+                    </a>
+                </div>
+            </li>
+            {% endif %}
+            {% empty %}
+            <li class="text-gray-500">No users found.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Your JavaScript code here
+    });
+</script>
+{% endblock %}
